@@ -1,16 +1,16 @@
-use reqwest::blocking::Client;
+use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use base64::{engine::general_purpose, Engine as _};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CubagemItem {
     pub altura: f64,
     pub largura: f64,
     pub comprimento: f64,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CotacaoRequest {
     #[serde(rename = "cnpjRemetente")]
     pub cnpj_remetente: String,
@@ -32,7 +32,7 @@ pub struct CotacaoRequest {
     pub cubagem: Vec<CubagemItem>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CotacaoDados {
     #[serde(rename = "valorFrete")]
     pub valor_frete: Option<f64>,
@@ -48,7 +48,7 @@ pub struct CotacaoDados {
     pub observacoes: Option<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CotacaoResponse {
     pub status: i32,
     pub mensagem: Option<String>,
@@ -61,8 +61,6 @@ pub enum BraspressError {
     Http(#[from] reqwest::Error),
     #[error("API error: {0}")]
     Api(String),
-    #[error("Authentication required")]
-    AuthRequired,
     #[error("Invalid credentials")]
     InvalidCredentials,
 }
@@ -75,43 +73,45 @@ pub struct BraspressClient {
 }
 
 impl BraspressClient {
-    pub fn new(username: String, password: String) -> Self {
+    pub fn new(username: String, password: String) -> Result<Self, BraspressError> {
         let client = Client::builder()
             .timeout(Duration::from_secs(30))
-            .build()
-            .expect("Failed to create HTTP client");
+            .connect_timeout(Duration::from_secs(10))
+            .build()?;
 
-        Self {
+        Ok(Self {
             client,
             base_url: "https://api.braspress.com/v1/cotacao/calcular/json".to_string(),
             username,
             password,
-        }
+        })
     }
 
-    pub fn calcular_cotacao(&self, request: CotacaoRequest) -> Result<CotacaoResponse, BraspressError> {
+    pub async fn calcular_cotacao(&self, request: CotacaoRequest) -> Result<CotacaoResponse, BraspressError> {
         let auth = general_purpose::STANDARD.encode(format!("{}:{}", self.username, self.password));
-        
+
         let response = self.client
             .post(&self.base_url)
             .header("Authorization", format!("Basic {}", auth))
             .header("Content-Type", "application/json")
             .header("Accept", "application/json")
             .json(&request)
-            .send()?;
+            .send()
+            .await?;
 
         let status = response.status().as_u16() as i32;
-        
+
         if status == 401 {
             return Err(BraspressError::InvalidCredentials);
         }
 
         if !response.status().is_success() {
-            let error_text = response.text().unwrap_or_default();
+            let error_text = response.text().await.unwrap_or_default();
+            log::error!("Braspress API error HTTP {}: {}", status, error_text);
             return Err(BraspressError::Api(format!("HTTP {}: {}", status, error_text)));
         }
 
-        let cotacao: CotacaoResponse = response.json()?;
+        let cotacao: CotacaoResponse = response.json().await?;
         Ok(cotacao)
     }
 }

@@ -10,9 +10,11 @@ export function useCotacaoCalcular() {
     onSuccess: (data) => {
       queryClient.setQueryData(["cotacao", "last"], data);
     },
+    retry: false,
   });
 }
 
-export function useCotacaoLast() {
-  return { data: undefined };
+export function useCotacaoLast(): CotacaoResponse | undefined {
+  const queryClient = useQueryClient();
+  return queryClient.getQueryData<CotacaoResponse>(["cotacao", "last"]);
 }

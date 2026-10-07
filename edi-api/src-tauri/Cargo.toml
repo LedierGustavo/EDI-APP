@@ -28,7 +28,7 @@ tauri-plugin-notification = "2"
 tauri-plugin-http = "2"
 tauri-plugin-updater = "2"
 tauri-plugin-shell = "2"
-reqwest = { version = "0.12", features = ["json", "rustls-tls", "blocking"] }
+reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
 keyring = "4.2"
 base64 = "0.22"
 anyhow = "1.0"

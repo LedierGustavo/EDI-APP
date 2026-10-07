@@ -1,5 +1,5 @@
 import React from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Calculator, Loader2, Save, Key, AlertCircle } from "lucide-react";
 import { Button } from "./ui/button";
@@ -37,6 +37,9 @@ export function CotacaoForm() {
   const [showCredentials, setShowCredentials] = React.useState(false);
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
+
+  const modalValue = useWatch({ control: form.control, name: "modal" });
+  const tipoFreteValue = useWatch({ control: form.control, name: "tipoFrete" });
 
   const onSubmit = async (data: CotacaoRequest) => {
     if (!credenciais?.hasCredentials) {
@@ -88,9 +91,6 @@ export function CotacaoForm() {
       </div>
     );
   }
-
-  const modalValue = form.watch("modal");
-  const tipoFreteValue = form.watch("tipoFrete");
 
   return (
     <div className="space-y-6">

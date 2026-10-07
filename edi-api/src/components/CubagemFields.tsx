@@ -1,13 +1,11 @@
+import React from "react";
 import { useFieldArray, useFormContext } from "react-hook-form";
 import { Plus, Trash2, GripVertical } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 
-interface CubagemFieldsProps {
-}
-
-export function CubagemFields({}: CubagemFieldsProps) {
+export const CubagemFields = React.memo(function CubagemFields() {
   const { control, register, formState: { errors } } = useFormContext();
   const { fields, append, remove } = useFieldArray({
     control,
@@ -114,4 +112,4 @@ export function CubagemFields({}: CubagemFieldsProps) {
       )}
     </div>
   );
-}
+});

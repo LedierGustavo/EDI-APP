@@ -1,40 +1,69 @@
 import { invoke } from "@tauri-apps/api/core";
 import type { CotacaoRequest, CotacaoResponse, ApiCredentials, ApiError } from "../types/api";
 
-export interface CotacaoCalcularArgs {
-  request: CotacaoRequest;
-}
-
-export interface CredenciaisSalvarArgs {
-  credentials: ApiCredentials;
-}
-
 export interface CredenciaisCarregarResult {
-  username: string;
-  password: string;
   hasCredentials: boolean;
+}
+
+const INVOKE_TIMEOUT_MS = 35_000;
+
+async function invokeWithTimeout<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    const result = await Promise.race([
+      invoke<T>(cmd, args),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(
+          () => reject(new Error("Tempo esgotado. Verifique sua conexão e tente novamente.")),
+          INVOKE_TIMEOUT_MS,
+        );
+      }),
+    ]);
+    return result;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+function toApiError(error: unknown, fallback: string): Error {
+  if (error instanceof Error) return error;
+  if (error && typeof error === "object" && "message" in error) {
+    const msg = (error as ApiError).message;
+    if (typeof msg === "string" && msg.length > 0) return new Error(msg);
+  }
+  return new Error(fallback);
 }
 
 export const api = {
   async cotacaoCalcular(request: CotacaoRequest): Promise<CotacaoResponse> {
     try {
-      const result = await invoke<CotacaoResponse>("cotacao_calcular", { request });
-      return result;
+      return await invokeWithTimeout<CotacaoResponse>("cotacao_calcular", { request });
     } catch (error) {
-      const apiError = error as ApiError;
-      throw new Error(apiError.message || "Erro ao calcular cotação");
+      throw toApiError(error, "Erro ao calcular cotação");
     }
   },
 
   async credenciaisSalvar(credentials: ApiCredentials): Promise<void> {
-    await invoke("credenciais_salvar", { credentials });
+    try {
+      await invokeWithTimeout<void>("credenciais_salvar", { credentials });
+    } catch (error) {
+      throw toApiError(error, "Erro ao salvar credenciais");
+    }
   },
 
   async credenciaisCarregar(): Promise<CredenciaisCarregarResult> {
-    return await invoke("credenciais_carregar");
+    try {
+      return await invokeWithTimeout<CredenciaisCarregarResult>("credenciais_carregar");
+    } catch (error) {
+      throw toApiError(error, "Erro ao carregar credenciais");
+    }
   },
 
   async credenciaisLimpar(): Promise<void> {
-    await invoke("credenciais_limpar");
+    try {
+      await invokeWithTimeout<void>("credenciais_limpar");
+    } catch (error) {
+      throw toApiError(error, "Erro ao limpar credenciais");
+    }
   },
 };

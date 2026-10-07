@@ -61,11 +61,11 @@ pub struct CotacaoResponse {
 
 #[derive(Debug, thiserror::Error)]
 pub enum BraspressError {
-    #[error("HTTP error: {0}")]
+    #[error("Falha de conexão com a API Braspress: {0}")]
     Http(#[from] reqwest::Error),
-    #[error("API error: {0}")]
+    #[error("Erro da API Braspress: {0}")]
     Api(String),
-    #[error("Invalid credentials")]
+    #[error("Credenciais inválidas (401) — verifique usuário e senha da Braspress")]
     InvalidCredentials,
 }
 
@@ -78,6 +78,7 @@ pub struct BraspressClient {
 
 impl BraspressClient {
     pub fn new(username: String, password: String) -> Result<Self, BraspressError> {
+        log::info!("[Braspress] Criando HTTP client (timeout=30s, connect=10s)");
         let client = Client::builder()
             .timeout(Duration::from_secs(30))
             .connect_timeout(Duration::from_secs(10))
@@ -94,6 +95,9 @@ impl BraspressClient {
     pub async fn calcular_cotacao(&self, request: CotacaoRequest) -> Result<CotacaoResponse, BraspressError> {
         let auth = general_purpose::STANDARD.encode(format!("{}:{}", self.username, self.password));
 
+        log::info!("[Braspress] POST {}", self.base_url);
+        log::debug!("[Braspress] Payload: {}", serde_json::to_string(&request).unwrap_or_default());
+
         let response = self.client
             .post(&self.base_url)
             .header("Authorization", format!("Basic {}", auth))
@@ -101,21 +105,38 @@ impl BraspressClient {
             .header("Accept", "application/json")
             .json(&request)
             .send()
-            .await?;
+            .await
+            .map_err(|e| {
+                log::error!("[Braspress] Erro no .send(): {}", e);
+                BraspressError::from(e)
+            })?;
 
-        let status = response.status().as_u16() as i32;
+        let status = response.status();
+        log::info!("[Braspress] Resposta recebida — Status: {}", status);
 
-        if status == 401 {
+        let body_text = response.text().await.unwrap_or_else(|e| {
+            log::error!("[Braspress] Erro ao ler body: {}", e);
+            String::new()
+        });
+
+        log::info!("[Braspress] Body bruto: {}", body_text);
+
+        if status.as_u16() == 401 {
+            log::error!("[Braspress] 401 Unauthorized — credenciais inválidas");
             return Err(BraspressError::InvalidCredentials);
         }
 
-        if !response.status().is_success() {
-            let error_text = response.text().await.unwrap_or_default();
-            log::error!("Braspress API error HTTP {}: {}", status, error_text);
-            return Err(BraspressError::Api(format!("HTTP {}: {}", status, error_text)));
+        if !status.is_success() {
+            log::error!("[Braspress] HTTP {} — {}", status, body_text);
+            return Err(BraspressError::Api(format!("HTTP {}: {}", status, body_text)));
         }
 
-        let cotacao: CotacaoResponse = response.json().await?;
+        let cotacao: CotacaoResponse = serde_json::from_str(&body_text).map_err(|e| {
+            log::error!("[Braspress] Erro ao desserializar JSON: {}", e);
+            BraspressError::Api(format!("Resposta inválida da API: {}", e))
+        })?;
+
+        log::info!("[Braspress] Cotação desserializada com sucesso — status: {}", cotacao.status);
         Ok(cotacao)
     }
 }

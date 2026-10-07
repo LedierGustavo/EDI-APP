@@ -1,5 +1,5 @@
 import React from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { useForm, useWatch, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Calculator, Loader2, Save, Key, AlertCircle } from "lucide-react";
 import { Button } from "./ui/button";
@@ -129,7 +129,8 @@ export function CotacaoForm() {
           </div>
         </CardHeader>
         <CardContent>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <FormProvider {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               <div className="md:col-span-2">
                 <Label htmlFor="cnpjRemetente">CNPJ Remetente *</Label>
@@ -303,7 +304,8 @@ export function CotacaoForm() {
                 )}
               </Button>
             </div>
-          </form>
+            </form>
+          </FormProvider>
         </CardContent>
       </Card>
 

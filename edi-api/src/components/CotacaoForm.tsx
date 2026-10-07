@@ -42,7 +42,7 @@ export function CotacaoForm() {
       const resultado = await calcularCotacao(data);
       toast({
         title: "Cotação realizada com sucesso",
-        description: `Valor total: R$ ${resultado.dados?.valorTotal?.toFixed(2).replace(".", ",") || "0,00"}`,
+        description: `Valor do frete: R$ ${resultado.totalFrete?.toFixed(2).replace(".", ",") || "0,00"}`,
         variant: "success",
       });
     } catch (err) {

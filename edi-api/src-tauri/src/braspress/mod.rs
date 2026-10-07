@@ -37,29 +37,14 @@ pub struct CotacaoRequest {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CotacaoDados {
-    #[serde(rename = "valorFrete", default)]
-    pub valor_frete: Option<f64>,
-    #[serde(rename = "valorSeguro", default)]
-    pub valor_seguro: Option<f64>,
-    #[serde(rename = "valorTotal", default)]
-    pub valor_total: Option<f64>,
-    #[serde(rename = "prazoEntrega", default)]
-    pub prazo_entrega: Option<i32>,
-    #[serde(rename = "dataValidade", default)]
-    pub data_validade: Option<String>,
-    #[serde(rename = "observacoes", default)]
-    pub observacoes: Option<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CotacaoResponse {
     #[serde(default)]
-    pub status: i32,
+    pub id: Option<i64>,
     #[serde(default)]
-    pub mensagem: Option<String>,
+    pub prazo: Option<i32>,
     #[serde(default)]
-    pub dados: Option<CotacaoDados>,
+    #[serde(rename = "totalFrete")]
+    pub total_frete: Option<f64>,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -139,7 +124,10 @@ impl BraspressClient {
             BraspressError::Api(format!("Resposta inválida da API: {}", e))
         })?;
 
-        log::info!("[Braspress] Cotação desserializada com sucesso — status: {}", cotacao.status);
+        log::info!(
+            "[Braspress] Desserializado — id={:?}, prazo={:?}, totalFrete={:?}",
+            cotacao.id, cotacao.prazo, cotacao.total_frete
+        );
         Ok(cotacao)
     }
 }

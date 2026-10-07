@@ -27,16 +27,9 @@ export const cotacaoRequestSchema = z.object({
 export type CotacaoRequest = z.infer<typeof cotacaoRequestSchema>;
 
 export const cotacaoResponseSchema = z.object({
-  status: z.number(),
-  mensagem: z.string().optional(),
-  dados: z.object({
-    valorFrete: z.number().optional(),
-    valorSeguro: z.number().optional(),
-    valorTotal: z.number().optional(),
-    prazoEntrega: z.number().optional(),
-    dataValidade: z.string().optional(),
-    observacoes: z.string().optional(),
-  }).optional(),
+  id: z.number().optional(),
+  prazo: z.number().optional(),
+  totalFrete: z.number().optional(),
 });
 
 export type CotacaoResponse = z.infer<typeof cotacaoResponseSchema>;

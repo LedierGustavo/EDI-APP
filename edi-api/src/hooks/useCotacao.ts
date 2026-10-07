@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import type { CotacaoRequest, CotacaoResponse } from "../types/api";
 
@@ -15,6 +15,10 @@ export function useCotacaoCalcular() {
 }
 
 export function useCotacaoLast(): CotacaoResponse | undefined {
-  const queryClient = useQueryClient();
-  return queryClient.getQueryData<CotacaoResponse>(["cotacao", "last"]);
+  const { data } = useQuery<CotacaoResponse>({
+    queryKey: ["cotacao", "last"],
+    enabled: false,
+    staleTime: Infinity,
+  });
+  return data;
 }

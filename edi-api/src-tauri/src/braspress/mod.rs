@@ -38,24 +38,27 @@ pub struct CotacaoRequest {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CotacaoDados {
-    #[serde(rename = "valorFrete")]
+    #[serde(rename = "valorFrete", default)]
     pub valor_frete: Option<f64>,
-    #[serde(rename = "valorSeguro")]
+    #[serde(rename = "valorSeguro", default)]
     pub valor_seguro: Option<f64>,
-    #[serde(rename = "valorTotal")]
+    #[serde(rename = "valorTotal", default)]
     pub valor_total: Option<f64>,
-    #[serde(rename = "prazoEntrega")]
+    #[serde(rename = "prazoEntrega", default)]
     pub prazo_entrega: Option<i32>,
-    #[serde(rename = "dataValidade")]
+    #[serde(rename = "dataValidade", default)]
     pub data_validade: Option<String>,
-    #[serde(rename = "observacoes")]
+    #[serde(rename = "observacoes", default)]
     pub observacoes: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CotacaoResponse {
+    #[serde(default)]
     pub status: i32,
+    #[serde(default)]
     pub mensagem: Option<String>,
+    #[serde(default)]
     pub dados: Option<CotacaoDados>,
 }
 

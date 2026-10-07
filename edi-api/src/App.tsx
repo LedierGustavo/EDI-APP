@@ -3,6 +3,7 @@ import { Toaster } from "./components/ui/toaster";
 import { CotacaoForm } from "./components/CotacaoForm";
 import { ResultadoCotacao } from "./components/ResultadoCotacao";
 import { Button } from "./components/ui/button";
+import { useCotacaoLast } from "./hooks/useCotacao";
 import { Package, Settings } from "lucide-react";
 
 const queryClient = new QueryClient({
@@ -15,6 +16,8 @@ const queryClient = new QueryClient({
 });
 
 function AppContent() {
+  const ultimaCotacao = useCotacaoLast();
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
@@ -42,7 +45,7 @@ function AppContent() {
 
           <div className="lg:col-span-5">
             <div className="sticky top-20 space-y-4">
-              <ResultadoCotacao />
+              <ResultadoCotacao data={ultimaCotacao} />
             </div>
           </div>
         </div>

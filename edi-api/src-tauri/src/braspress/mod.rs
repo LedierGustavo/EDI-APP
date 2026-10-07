@@ -12,10 +12,8 @@ pub struct CubagemItem {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CotacaoRequest {
-    #[serde(skip_serializing, default)]
-    pub username: String,
-    #[serde(skip_serializing, default)]
-    pub password: String,
+    #[serde(rename = "credencialId")]
+    pub credencial_id: i32,
     #[serde(rename = "cnpjRemetente")]
     pub cnpj_remetente: String,
     #[serde(rename = "cnpjDestinatario")]

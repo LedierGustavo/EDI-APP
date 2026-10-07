@@ -10,11 +10,13 @@ pub struct ApiCredentials {
 
 #[command]
 pub async fn cotacao_calcular(request: CotacaoRequest) -> Result<CotacaoResponse, String> {
-    if request.username.is_empty() || request.password.is_empty() {
-        return Err("Usuário e senha da API Braspress são obrigatórios.".to_string());
-    }
+    log::info!("[Command] cotacao_calcular — credencialId={}", request.credencial_id);
 
-    let client = BraspressClient::new(request.username.clone(), request.password.clone())
+    let credencial = crate::supabase::fetch_credencial(request.credencial_id).await?;
+
+    log::info!("[Command] Credencial encontrada — usuario={}", credencial.usuario);
+
+    let client = BraspressClient::new(credencial.usuario.clone(), credencial.senha.clone())
         .map_err(|e| e.to_string())?;
 
     client.calcular_cotacao(request)

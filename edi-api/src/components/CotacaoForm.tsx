@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "./ui/card";
 import { cotacaoRequestSchema, type CotacaoRequest } from "../types/api";
 import { CubagemFields } from "./CubagemFields";
+import { UsuarioApiCombobox } from "./UsuarioApiCombobox";
 import { useCotacaoCalcular } from "../hooks/useCotacao";
 import { toast } from "../hooks/useToast";
 
@@ -18,8 +19,7 @@ export function CotacaoForm() {
   const form = useForm<CotacaoRequest>({
     resolver: zodResolver(cotacaoRequestSchema),
     defaultValues: {
-      username: "",
-      password: "",
+      credencialId: 0,
       cnpjRemetente: "",
       cnpjDestinatario: "",
       cnpjConsignado: "",
@@ -79,32 +79,14 @@ export function CotacaoForm() {
                 <Key className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm font-medium text-muted-foreground">Credenciais da API Braspress</span>
               </div>
-              <div className="grid gap-4 md:grid-cols-2 p-4 border rounded-lg bg-muted/30">
-                <div>
-                  <Label htmlFor="username">Usuário *</Label>
-                  <Input
-                    id="username"
-                    placeholder="seu_usuario"
-                    autoComplete="username"
-                    {...form.register("username")}
-                  />
-                  {form.formState.errors.username && (
-                    <p className="text-xs text-destructive mt-1">{form.formState.errors.username.message}</p>
-                  )}
+              <div className="p-4 border rounded-lg bg-muted/30">
+                <Label htmlFor="credencialId">Usuário API *</Label>
+                <div className="mt-1">
+                  <UsuarioApiCombobox />
                 </div>
-                <div>
-                  <Label htmlFor="password">Senha *</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="sua_senha"
-                    autoComplete="current-password"
-                    {...form.register("password")}
-                  />
-                  {form.formState.errors.password && (
-                    <p className="text-xs text-destructive mt-1">{form.formState.errors.password.message}</p>
-                  )}
-                </div>
+                {form.formState.errors.credencialId && (
+                  <p className="text-xs text-destructive mt-1">{form.formState.errors.credencialId.message}</p>
+                )}
               </div>
             </div>
 

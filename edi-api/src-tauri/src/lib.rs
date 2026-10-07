@@ -31,3 +31,4 @@ pub fn run() {
 mod commands;
 mod braspress;
 mod keyring;
+mod supabase;

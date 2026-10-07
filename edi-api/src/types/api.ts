@@ -9,6 +9,8 @@ export const cubagemSchema = z.object({
 export type Cubagem = z.infer<typeof cubagemSchema>;
 
 export const cotacaoRequestSchema = z.object({
+  username: z.string().min(1, "Usuário da API é obrigatório"),
+  password: z.string().min(1, "Senha da API é obrigatória"),
   cnpjRemetente: z.string().length(14, "CNPJ do remetente deve ter 14 dígitos"),
   cnpjDestinatario: z.string().length(14, "CNPJ do destinatário deve ter 14 dígitos"),
   cnpjConsignado: z.string().length(14, "CNPJ do consignado deve ter 14 dígitos").optional().or(z.literal("")),

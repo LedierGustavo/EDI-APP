@@ -37,13 +37,6 @@ pub fn load_credentials() -> Result<Option<(String, String)>, String> {
     }
 }
 
-pub fn delete_credentials() -> Result<(), String> {
-    let entry = get_entry()?;
-    
-    entry.delete_credential()
-        .map_err(|e| format!("Failed to delete credentials: {}", e))
-}
-
 pub fn has_credentials() -> bool {
     load_credentials().map(|c| c.is_some()).unwrap_or(false)
 }

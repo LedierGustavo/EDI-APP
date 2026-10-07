@@ -1,10 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import type { CotacaoRequest, CotacaoResponse, ApiCredentials, ApiError } from "../types/api";
 
-export interface CredenciaisCarregarResult {
-  hasCredentials: boolean;
-}
-
 const INVOKE_TIMEOUT_MS = 35_000;
 
 async function invokeWithTimeout<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
@@ -51,19 +47,11 @@ export const api = {
     }
   },
 
-  async credenciaisCarregar(): Promise<CredenciaisCarregarResult> {
+  async credenciaisExistem(): Promise<boolean> {
     try {
-      return await invokeWithTimeout<CredenciaisCarregarResult>("credenciais_carregar");
+      return await invokeWithTimeout<boolean>("credenciais_existem");
     } catch (error) {
-      throw toApiError(error, "Erro ao carregar credenciais");
-    }
-  },
-
-  async credenciaisLimpar(): Promise<void> {
-    try {
-      await invokeWithTimeout<void>("credenciais_limpar");
-    } catch (error) {
-      throw toApiError(error, "Erro ao limpar credenciais");
+      throw toApiError(error, "Erro ao verificar credenciais");
     }
   },
 };

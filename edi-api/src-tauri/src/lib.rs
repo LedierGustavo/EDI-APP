@@ -17,8 +17,6 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::cotacao_calcular,
             commands::credenciais_salvar,
-            commands::credenciais_carregar,
-            commands::credenciais_limpar,
             commands::credenciais_existem,
         ])
         .setup(|app| {

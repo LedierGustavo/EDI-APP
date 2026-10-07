@@ -1,7 +1,7 @@
 import React from "react";
 import { useForm, useWatch, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Calculator, Loader2, Save, Key, AlertCircle } from "lucide-react";
+import { Calculator, Loader2, Key } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -10,16 +10,16 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "./ui/
 import { cotacaoRequestSchema, type CotacaoRequest } from "../types/api";
 import { CubagemFields } from "./CubagemFields";
 import { useCotacaoCalcular } from "../hooks/useCotacao";
-import { useCredenciais } from "../hooks/useCredenciais";
 import { toast } from "../hooks/useToast";
 
 export function CotacaoForm() {
-  const { credenciais, isLoading: credenciaisLoading, salvar } = useCredenciais();
   const { mutateAsync: calcularCotacao, isPending: isCalculando } = useCotacaoCalcular();
 
   const form = useForm<CotacaoRequest>({
     resolver: zodResolver(cotacaoRequestSchema),
     defaultValues: {
+      username: "",
+      password: "",
       cnpjRemetente: "",
       cnpjDestinatario: "",
       cnpjConsignado: "",
@@ -34,24 +34,10 @@ export function CotacaoForm() {
     },
   });
 
-  const [showCredentials, setShowCredentials] = React.useState(false);
-  const [username, setUsername] = React.useState("");
-  const [password, setPassword] = React.useState("");
-
   const modalValue = useWatch({ control: form.control, name: "modal" });
   const tipoFreteValue = useWatch({ control: form.control, name: "tipoFrete" });
 
   const onSubmit = async (data: CotacaoRequest) => {
-    if (!credenciais?.hasCredentials) {
-      toast({
-        title: "Credenciais não configuradas",
-        description: "Configure usuário e senha da API Braspress antes de calcular.",
-        variant: "destructive",
-      });
-      setShowCredentials(true);
-      return;
-    }
-
     try {
       const resultado = await calcularCotacao(data);
       toast({
@@ -69,41 +55,8 @@ export function CotacaoForm() {
     }
   };
 
-  const handleSaveCredentials = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!username || !password) return;
-
-    try {
-      await salvar({ username, password });
-      toast({ title: "Credenciais salvas", variant: "success" });
-      setShowCredentials(false);
-      setUsername("");
-      setPassword("");
-    } catch {
-      toast({ title: "Erro ao salvar credenciais", variant: "destructive" });
-    }
-  };
-
-  if (credenciaisLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
-      {!credenciais?.hasCredentials && (
-        <div className="rounded-lg border border-yellow-500/50 bg-yellow-50 p-4 text-yellow-900 dark:bg-yellow-900/20 dark:text-yellow-100">
-          <div className="flex items-center gap-2">
-            <AlertCircle className="h-5 w-5" />
-            <span className="font-medium">Credenciais da API não configuradas</span>
-          </div>
-          <p className="text-sm mt-1">Clique no botão "Configurar Credenciais" para definir usuário e senha da Braspress.</p>
-        </div>
-      )}
-
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -116,21 +69,49 @@ export function CotacaoForm() {
                 Preencha os dados abaixo para calcular o frete na API Braspress
               </CardDescription>
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setShowCredentials(true)}
-              className="gap-1"
-            >
-              <Key className="h-4 w-4" />
-              Credenciais
-            </Button>
           </div>
         </CardHeader>
         <CardContent>
           <FormProvider {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <div className="pt-2">
+              <div className="flex items-center gap-2 mb-4">
+                <Key className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium text-muted-foreground">Credenciais da API Braspress</span>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2 p-4 border rounded-lg bg-muted/30">
+                <div>
+                  <Label htmlFor="username">Usuário *</Label>
+                  <Input
+                    id="username"
+                    placeholder="seu_usuario"
+                    autoComplete="username"
+                    {...form.register("username")}
+                  />
+                  {form.formState.errors.username && (
+                    <p className="text-xs text-destructive mt-1">{form.formState.errors.username.message}</p>
+                  )}
+                </div>
+                <div>
+                  <Label htmlFor="password">Senha *</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="sua_senha"
+                    autoComplete="current-password"
+                    {...form.register("password")}
+                  />
+                  {form.formState.errors.password && (
+                    <p className="text-xs text-destructive mt-1">{form.formState.errors.password.message}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t">
+              <span className="text-sm font-medium text-muted-foreground">Dados da Cotação</span>
+            </div>
+
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               <div className="md:col-span-2">
                 <Label htmlFor="cnpjRemetente">CNPJ Remetente *</Label>
@@ -308,56 +289,6 @@ export function CotacaoForm() {
           </FormProvider>
         </CardContent>
       </Card>
-
-      {showCredentials && (
-        <Card className="border-primary">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Key className="h-5 w-5" />
-              Configurar Credenciais da API Braspress
-            </CardTitle>
-            <CardDescription>
-              As credenciais são salvas de forma segura no gerenciador de credenciais do Windows (DPAPI).
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSaveCredentials} className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <Label htmlFor="apiUsername">Usuário *</Label>
-                  <Input
-                    id="apiUsername"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="seu_usuario"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="apiPassword">Senha *</Label>
-                  <Input
-                    id="apiPassword"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="sua_senha"
-                    required
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end gap-3 pt-4 border-t">
-                <Button type="button" variant="secondary" onClick={() => setShowCredentials(false)}>
-                  Cancelar
-                </Button>
-                <Button type="submit" className="gap-2">
-                  <Save className="h-4 w-4" />
-                  Salvar Credenciais
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }
